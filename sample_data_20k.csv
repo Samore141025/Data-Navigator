@@ -1,0 +1,22 @@
+id,age,income,satisfaction_score,department,city,status,feedback_text,is_active,null_test_col
+1,25,45000,7.5,Engineering,New York,Active,"Great environment and team",1,10
+2,34,65000,8.2,Sales,London,Active,"Sales targets are challenging but rewarding",1,
+3,45,85000,4.5,Marketing,Tokyo,On Leave,"Too much pressure lately",1,25
+4,29,55000,6.7,HR,San Francisco,Active,"Culture is improving daily",1,
+5,41,95000,9.1,Finance,Paris,Active,"Perfect balance of work and life",1,5
+6,38,72000,2.3,Engineering,New York,Resigned,"Management was very poor",0,
+7,52,120000,8.8,Sales,London,Active,"Best place I've worked at",1,15
+8,26,48000,5.5,Marketing,Tokyo,Active,"Neutral feeling about the project",1,
+9,31,61000,3.1,HR,San Francisco,On Leave,"Stress levels are very high",1,40
+10,44,105000,1.2,Finance,Paris,Resigned,"Terrible support for employees",0,
+11,27,49000,7.9,Engineering,New York,Active,"Innovative projects always happening",1,
+12,33,67000,8.5,Sales,London,Active,"Great bonuses and perks",1,50
+13,46,88000,4.2,Marketing,Tokyo,Active,"Communication is often slow",1,
+14,30,56000,6.9,HR,San Francisco,Active,"Healthy work culture",1,60
+15,42,98000,9.4,Finance,Paris,Active,"Amazing financial growth",1,
+16,39,74000,2.6,Engineering,New York,On Leave,"Burnout is real here",1,70
+17,53,125000,8.9,Sales,London,Active,"Love the freedom we have",1,
+18,25,46000,5.2,Marketing,Tokyo,Active,"Just okay could be better",1,80
+19,32,63000,3.4,HR,San Francisco,Resigned,"I hate the bureaucracy",0,
+20,45,110000,1.5,Finance,Paris,Active,"Constant overtime with no reward",1,90
+... continue with thousands more rows ...

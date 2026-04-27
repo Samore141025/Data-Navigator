@@ -1,11 +1,23 @@
-<div align="center">
+# Advanced Data Navigator - CSV Requirements
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+To ensure all functions (ML, Stats, Text Analytics) work correctly, your CSV file should follow these guidelines:
 
-  <h1>Built with AI Studio</h2>
+## 1. File Format
+- **Type**: Standard CSV (Comma Separated Values).
+- **Encoding**: UTF-8.
+- **Max Size**: 100MB.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 2. Recommended Structure
+Your CSV should include a header row with unique names. For best results, include various data types:
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+| Data Type | Example Column | Used For |
+|-----------|----------------|----------|
+| **Numeric** | `age`, `price`, `score` | Histograms, Heatmaps, Linear Regression, Clustering |
+| **Categorical** | `status`, `category` | Grouped Descriptive Stats, Bar Charts |
+| **Text** | `review`, `comment` | Word Clouds, Sentiment Analysis, TF-IDF |
+| **Boolean** | `is_active`, `purchased` | Logistic Regression, Binary Classification |
 
-</div>
+## 3. Common Issues & Solutions
+- **NaN in ML Results**: This happens if your selected target has 0 variance (all values are the same) or the dataset is too small. Ensure your target variable has multiple different values.
+- **Missing Heatmap**: Visualizations > Heatmap requires at least two numeric columns to calculate correlations.
+- **Empty Word Cloud**: Ensure you select a column with descriptive text (not IDs or short codes).

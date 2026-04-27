@@ -1,0 +1,11 @@
+{
+  "name": "Advanced Data Navigator",
+  "description": "Professional-grade browser-side data science platform for wrangling, statistics, ML modeling, and text analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "Data Analysis",
+    "Machine Learning",
+    "Text Processing",
+    "Visualization"
+  ]
+}
