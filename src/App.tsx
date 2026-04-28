@@ -19,20 +19,22 @@ export default function App() {
   const [originalData, setOriginalData] = useState<any[] | null>(null);
   const [metadata, setMetadata] = useState<ColumnMetadata[]>([]);
   const [isCleaning, setIsCleaning] = useState(false);
-  const [cleaningHistory, setCleaningHistory] = useState<string[]>([]);
+  const [cleaningHistory, setCleaningHistory] = useState<{message: string, type: 'info' | 'success' | 'warning', time: string}[]>([]);
   const [activeTab, setActiveTab] = useState('wrangling');
   
   // Sidebar Controls
   const [targetNumeric, setTargetNumeric] = useState('');
   const [targetBinary, setTargetBinary] = useState('');
-  const [targetMulti, setTargetMulti] = useState('');
   const [textCol, setTextCol] = useState('');
   const [vizStyle, setVizStyle] = useState('Histogram');
+  const [selectedX, setSelectedX] = useState('');
+  const [selectedY, setSelectedY] = useState('');
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setFile(file);
+      setCleaningHistory([{ message: "CSV sync initiated: Reading stream...", type: 'info', time: new Date().toLocaleTimeString() }]);
       Papa.parse(file, {
         header: true,
         dynamicTyping: true,
@@ -48,10 +50,13 @@ export default function App() {
           const categoricalCols = meta.filter(m => m.type === 'categorical');
           const txtCols = meta.filter(m => m.type === 'text');
           
-          if (numericCols.length > 0) setTargetNumeric(numericCols[0].name);
+          if (numericCols.length > 0) {
+            setTargetNumeric(numericCols[0].name);
+            setSelectedX(numericCols[0].name);
+            if (numericCols.length > 1) setSelectedY(numericCols[1].name);
+          }
           if (categoricalCols.length > 0) {
             setTargetBinary(categoricalCols[0].name);
-            setTargetMulti(categoricalCols[0].name);
           }
           if (txtCols.length > 0) setTextCol(txtCols[0].name);
         }
@@ -63,10 +68,17 @@ export default function App() {
     if (!data) return;
     setIsCleaning(true);
     setTimeout(() => {
-      const { cleaned, history } = cleanData(data, metadata);
+      const { cleaned, history: logHistory } = cleanData(data, metadata);
       setData(cleaned);
       setMetadata(getColumnMetadata(cleaned));
-      setCleaningHistory(history);
+      
+      const newEntries = logHistory.map(h => ({
+        message: h,
+        type: (h.startsWith('OPTIMIZE') ? 'success' : 'info') as 'info' | 'success' | 'warning',
+        time: new Date().toLocaleTimeString()
+      }));
+      
+      setCleaningHistory(prev => [...newEntries, ...prev]);
       setIsCleaning(false);
     }, 800);
   };
@@ -103,7 +115,7 @@ export default function App() {
 
           <h2>3. Cleaning Log</h2>
           <ul>
-            ${cleaningHistory.map(h => `<li>${h}</li>`).join('')}
+            ${cleaningHistory.map(h => `<li>[${h.time}] ${h.message}</li>`).join('')}
           </ul>
           
           <p style="margin-top: 50px; font-size: 12px; color: #8B949E;">Automated Data Science Pipeline</p>
@@ -158,48 +170,9 @@ export default function App() {
             </div>
           </section>
 
-          {/* Configuration Section */}
+          {/* Configuration Section Removed as requested */}
           {data && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <section>
-                <label className="block text-[11px] font-semibold text-brand-muted uppercase mb-2">Configurations</label>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-[10px] font-medium text-brand-muted mb-1 block">Numeric Target</label>
-                    <select value={targetNumeric} onChange={e => setTargetNumeric(e.target.value)} className="w-full bg-brand-card border border-brand-border rounded px-3 py-1.5 text-xs focus:outline-none focus:border-brand-accent transition-colors">
-                      {metadata.filter(m => m.type === 'numeric').map(m => (
-                        <option key={m.name} value={m.name}>{m.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-medium text-brand-muted mb-1 block">Binary Target</label>
-                    <select value={targetBinary} onChange={e => setTargetBinary(e.target.value)} className="w-full bg-brand-card border border-brand-border rounded px-3 py-1.5 text-xs focus:outline-none focus:border-brand-accent transition-colors">
-                      {metadata.filter(m => m.type === 'categorical').map(m => (
-                        <option key={m.name} value={m.name}>{m.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-medium text-brand-muted mb-1 block">Text Column</label>
-                    <select value={textCol} onChange={e => setTextCol(e.target.value)} className="w-full bg-brand-card border border-brand-border rounded px-3 py-1.5 text-xs focus:outline-none focus:border-brand-accent transition-colors">
-                      {metadata.map(m => (
-                        <option key={m.name} value={m.name}>{m.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </section>
-
-              <section>
-                <label className="block text-[11px] font-semibold text-brand-muted uppercase mb-2">Visualization</label>
-                <select value={vizStyle} onChange={e => setVizStyle(e.target.value)} className="w-full bg-brand-card border border-brand-border rounded px-3 py-1.5 text-xs">
-                  {['Histogram', 'Boxplot', 'Scatter', 'Heatmap'].map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </section>
-
               <div className="pt-2">
                 <button 
                   onClick={handleClean}
@@ -230,10 +203,9 @@ export default function App() {
         <header className="h-14 border-b border-brand-border px-6 flex items-center justify-between bg-brand-bg">
           <div className="text-xs font-medium flex items-center gap-3">
              <span className="flex items-center gap-2">Pipeline Status: <span className="text-brand-success">● Active</span></span>
-             <div className="flex gap-2 ml-4">
+              <div className="flex gap-2 ml-4">
                 <span className="px-1.5 py-0.5 bg-brand-success/15 text-brand-success border border-brand-success/20 rounded text-[9px] font-bold uppercase">Pandas Core 2.0</span>
-                <span className="px-1.5 py-0.5 bg-brand-accent/15 text-brand-accent border border-brand-accent/20 rounded text-[9px] font-bold uppercase">Vite Build</span>
-             </div>
+              </div>
           </div>
           
           {data && (
@@ -263,14 +235,61 @@ export default function App() {
 
           <div className="p-6">
             {!data ? (
-              <div className="h-96 flex flex-col items-center justify-center text-center max-w-sm mx-auto">
-                <div className="w-16 h-16 bg-white/2 border border-brand-border rounded-full flex items-center justify-center mb-6 text-brand-accent">
-                  <Upload size={24} />
+              <div className="h-[70vh] flex flex-col items-center justify-center text-center max-w-lg mx-auto">
+                <div className="w-20 h-20 bg-brand-accent/10 border border-brand-accent/20 rounded-full flex items-center justify-center mb-8 text-brand-accent animate-pulse">
+                  <Upload size={32} />
                 </div>
-                <h2 className="text-lg font-bold text-brand-text mb-2">Ready for Discovery</h2>
-                <p className="text-sm text-brand-muted mb-8 leading-relaxed">
-                  Upload a CSV dataset to initiate the automated analysis sequence.
+                <h2 className="text-3xl font-black text-brand-text mb-4 tracking-tight uppercase">Ready for Discovery</h2>
+                <p className="text-brand-muted mb-10 leading-relaxed text-sm">
+                  Upload a CSV dataset to initiate the automated analysis sequence. Our engine will synthesize features, normalize distributions, and prepare neural pathways.
                 </p>
+                <div className="flex flex-col sm:flex-row gap-4 w-full px-6">
+                  <label className="flex-1 bg-brand-accent text-white px-8 py-4 rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all shadow-lg shadow-brand-accent/20 active:scale-95 flex items-center justify-center gap-2">
+                    <Database size={18} />
+                    Import CSV
+                    <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
+                  </label>
+                  <button 
+                    onClick={() => {
+                      const sample = [
+                        { Tenure: 5, MonthlySpend: 30.5, Calls: 1, Churn: 'No' },
+                        { Tenure: 1, MonthlySpend: 89.9, Calls: 5, Churn: 'Yes' },
+                        { Tenure: 12, MonthlySpend: 45.0, Calls: 0, Churn: 'No' },
+                        { Tenure: 2, MonthlySpend: 75.5, Calls: 4, Churn: 'Yes' },
+                        { Tenure: 24, MonthlySpend: 32.1, Calls: 1, Churn: 'No' },
+                        { Tenure: 3, MonthlySpend: 95.0, Calls: 6, Churn: 'Yes' },
+                        { Tenure: 18, MonthlySpend: 55.2, Calls: 2, Churn: 'No' },
+                        { Tenure: 6, MonthlySpend: 68.4, Calls: 3, Churn: 'Yes' },
+                        { Tenure: 36, MonthlySpend: 42.0, Calls: 0, Churn: 'No' },
+                        { Tenure: 4, MonthlySpend: 82.3, Calls: 5, Churn: 'Yes' },
+                        { Tenure: 48, MonthlySpend: 38.5, Calls: 1, Churn: 'No' },
+                        { Tenure: 2, MonthlySpend: 79.9, Calls: 4, Churn: 'Yes' },
+                        { Tenure: 15, MonthlySpend: 48.2, Calls: 2, Churn: 'No' },
+                        { Tenure: 5, MonthlySpend: 72.1, Calls: 3, Churn: 'Yes' },
+                        { Tenure: 60, MonthlySpend: 41.5, Calls: 0, Churn: 'No' },
+                      ];
+                      setOriginalData(sample);
+                      setData(sample);
+                      setCleaningHistory([{ message: "Neural dataset loaded: Initializing analytic nodes...", type: 'success', time: new Date().toLocaleTimeString() }]);
+                      const meta = getColumnMetadata(sample);
+                      setMetadata(meta);
+                      const num = meta.filter(m => m.type === 'numeric');
+                      const cat = meta.filter(m => m.type === 'categorical');
+                      const txt = meta.filter(m => m.type === 'text');
+                      if (num.length > 0) {
+                        setTargetNumeric(num[0].name);
+                        setSelectedX(num[0].name);
+                        if (num.length > 1) setSelectedY(num[1].name);
+                      }
+                      if (cat.length > 0) setTargetBinary(cat[0].name);
+                      if (txt.length > 0) setTextCol(txt[0].name);
+                    }}
+                    className="flex-1 bg-white/5 border border-brand-border text-brand-text px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Binary size={18} />
+                    Load Sample
+                  </button>
+                </div>
               </div>
             ) : (
               <AnimatePresence mode="wait">
@@ -284,9 +303,36 @@ export default function App() {
                 >
                   {activeTab === 'wrangling' && <DataWranglingTab data={data} original={originalData} metadata={metadata} history={cleaningHistory} />}
                   {activeTab === 'stats' && <DescriptiveStatsTab data={data} metadata={metadata} />}
-                  {activeTab === 'models' && <ModelsTab data={data} metadata={metadata} targetNumeric={targetNumeric} targetBinary={targetBinary} targetMulti={targetMulti} />}
-                  {activeTab === 'text' && <TextAnalyticsTab data={data} textCol={textCol} />}
-                  {activeTab === 'viz' && <VisualizationsTab data={data} metadata={metadata} style={vizStyle} />}
+                  {activeTab === 'models' && (
+                    <ModelsTab 
+                      data={data} 
+                      metadata={metadata} 
+                      targetNumeric={targetNumeric} 
+                      targetBinary={targetBinary} 
+                      setTargetNumeric={setTargetNumeric}
+                      setTargetBinary={setTargetBinary}
+                    />
+                  )}
+                  {activeTab === 'text' && (
+                    <TextAnalyticsTab 
+                      data={data} 
+                      textCol={textCol} 
+                      setTextCol={setTextCol}
+                      metadata={metadata}
+                    />
+                  )}
+                  {activeTab === 'viz' && (
+                    <VisualizationsTab 
+                      data={data} 
+                      metadata={metadata} 
+                      style={vizStyle} 
+                      selectedX={selectedX}
+                      selectedY={selectedY}
+                      setVizStyle={setVizStyle}
+                      setSelectedX={setSelectedX}
+                      setSelectedY={setSelectedY}
+                    />
+                  )}
                 </motion.div>
               </AnimatePresence>
             )}

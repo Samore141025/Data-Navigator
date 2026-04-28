@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ColumnMetadata } from '../../types';
-import { calculateSummary, calculateCorrelationMatrix } from '../../lib/data-engine';
+import { calculateSummary } from '../../lib/data-engine';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis } from 'recharts';
 import _ from 'lodash';
 
@@ -18,11 +18,6 @@ export default function DescriptiveStatsTab({ data, metadata }: Props) {
       name: col.name,
       ...calculateSummary(data.map(r => Number(r[col.name])).filter(v => !isNaN(v)))
     }));
-  }, [data, numericCols]);
-
-  const correlationMatrix = useMemo(() => {
-    if (numericCols.length < 2) return [];
-    return calculateCorrelationMatrix(data, numericCols.map(c => c.name));
   }, [data, numericCols]);
 
   const groupStats = useMemo(() => {
@@ -67,64 +62,6 @@ export default function DescriptiveStatsTab({ data, metadata }: Props) {
           </table>
         </div>
       </section>
-
-      {correlationMatrix.length > 0 && (
-        <section className="space-y-4">
-          <h3 className="text-xl font-bold text-brand-text">Correlation Heatmap</h3>
-          <div className="bg-brand-card border border-brand-border rounded-lg p-6 shadow-sm">
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis 
-                    type="category" 
-                    dataKey="x" 
-                    name="Variable 1" 
-                    tick={{ fontSize: 10, fill: '#8B949E' }} 
-                    interval={0}
-                    stroke="rgba(255,255,255,0.1)"
-                  />
-                  <YAxis 
-                    type="category" 
-                    dataKey="y" 
-                    name="Variable 2" 
-                    tick={{ fontSize: 10, fill: '#8B949E' }} 
-                    stroke="rgba(255,255,255,0.1)"
-                  />
-                  <ZAxis type="number" dataKey="value" range={[100, 1000]} />
-                  <Tooltip 
-                    cursor={{ strokeDasharray: '3 3' }}
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const cellData = payload[0].payload;
-                        return (
-                          <div className="bg-[#161B22] border border-white/10 p-3 rounded-lg text-xs shadow-xl">
-                            <p className="text-brand-muted mb-1">{cellData.x} × {cellData.y}</p>
-                            <p className="text-brand-accent font-bold text-sm">r = {cellData.value.toFixed(3)}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Scatter name="Correlation" data={correlationMatrix}>
-                    {correlationMatrix.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.value > 0 ? '#2F81F7' : '#F85149'} 
-                        fillOpacity={Math.abs(entry.value)}
-                      />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-[10px] text-brand-muted mt-4 italic text-center uppercase tracking-widest font-bold">
-              Blue: Positive | Red: Negative | Opacity: Strength
-            </p>
-          </div>
-        </section>
-      )}
 
       {groupStats && (
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">

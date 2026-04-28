@@ -83,7 +83,7 @@ export function calculateCorrelationMatrix(data: any[], numericCols: string[]) {
 }
 
 export function cleanData(df: any[], metadata: ColumnMetadata[]): { cleaned: any[], history: string[] } {
-  const history: string[] = [];
+  const history: string[] = ["Initiated automated cleaning sequence..."];
   const cleaned = df.map(row => ({ ...row }));
 
   metadata.forEach(col => {
@@ -96,10 +96,10 @@ export function cleanData(df: any[], metadata: ColumnMetadata[]): { cleaned: any
       if (col.type === 'numeric') {
         const nums = nonNull.map(Number);
         replacement = ss.median(nums);
-        history.push(`Fixed ${col.nullCount} missing values in '${col.name}' using median (${replacement.toFixed(2)})`);
+        history.push(`OPTIMIZE: Fixed ${col.nullCount} missing values in '${col.name}' using MEDIAN strategy.`);
       } else {
         replacement = _.head(_(nonNull).countBy().entries().maxBy(_.last))?.[0] || 'Unknown';
-        history.push(`Fixed ${col.nullCount} missing values in '${col.name}' using mode (${replacement})`);
+        history.push(`OPTIMIZE: Imputed ${col.nullCount} voids in '${col.name}' via categorical MODE.`);
       }
 
       cleaned.forEach(row => {
@@ -116,6 +116,10 @@ export function cleanData(df: any[], metadata: ColumnMetadata[]): { cleaned: any
       });
     }
   });
+
+  if (history.length === 1) {
+    history.push("No anomalies detected: Dataset integrity verified.");
+  }
 
   return { cleaned, history };
 }

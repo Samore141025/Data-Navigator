@@ -6,7 +6,7 @@ interface Props {
   data: any[];
   original: any[] | null;
   metadata: ColumnMetadata[];
-  history: string[];
+  history: { message: string, type: 'info' | 'success' | 'warning', time: string }[];
 }
 
 export default function DataWranglingTab({ data, original, metadata, history }: Props) {
@@ -84,9 +84,15 @@ export default function DataWranglingTab({ data, original, metadata, history }: 
                   <div className="italic opacity-30 px-2 py-4 border border-dashed border-brand-border rounded text-center">No transformations queued...</div>
                 ) : (
                   history.map((h, i) => (
-                    <div key={i} className="flex gap-2">
-                       <span className="text-brand-success">{" >> "}</span>
-                       <span>{h}</span>
+                    <div key={i} className="flex flex-col gap-0.5 border-l border-brand-border pl-3 pb-3 relative">
+                       <div className="absolute -left-[4.5px] top-1 w-2 h-2 rounded-full border border-brand-bg shadow-sm" style={{ backgroundColor: h.type === 'success' ? '#3fb950' : h.type === 'warning' ? '#d29922' : '#8b949e' }} />
+                       <div className="flex items-center justify-between">
+                          <span className={`${h.type === 'success' ? 'text-brand-success' : 'text-brand-muted'} font-bold`}>
+                            {h.type === 'success' ? '✓ ' : '• '} 
+                            {h.message}
+                          </span>
+                          <span className="text-[9px] opacity-40">{h.time}</span>
+                       </div>
                     </div>
                   ))
                 )}

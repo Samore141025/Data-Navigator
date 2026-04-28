@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { ColumnMetadata } from '../../types';
 import { processText, calculateTFIDF } from '../../lib/text-engine';
 import { Languages, Type, ListTree, Highlighter } from 'lucide-react';
 import _ from 'lodash';
@@ -6,9 +7,11 @@ import _ from 'lodash';
 interface Props {
   data: any[];
   textCol: string;
+  setTextCol: (s: string) => void;
+  metadata: ColumnMetadata[];
 }
 
-export default function TextAnalyticsTab({ data, textCol }: Props) {
+export default function TextAnalyticsTab({ data, textCol, setTextCol, metadata }: Props) {
   const analysis = useMemo(() => {
     if (!textCol || data.length === 0) return null;
     
@@ -41,15 +44,42 @@ export default function TextAnalyticsTab({ data, textCol }: Props) {
 
   if (!textCol) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 text-brand-muted">
-        <Languages size={48} className="mb-4 opacity-10" />
-        <p className="font-medium tracking-tight">Select a text column in the sidebar to begin analysis</p>
+      <div className="space-y-6">
+        <div className="bg-brand-sidebar/30 p-6 rounded-2xl border border-brand-border/40 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-brand-text">Text Analytics</h2>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-brand-muted uppercase">Select Text Column</label>
+            <select value={textCol} onChange={e => setTextCol(e.target.value)} className="block bg-brand-bg border border-brand-border rounded px-2 py-1 text-[11px] font-bold focus:border-brand-accent outline-none">
+              <option value="">Select...</option>
+              {metadata.map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center p-20 text-brand-muted">
+          <Languages size={48} className="mb-4 opacity-10" />
+          <p className="font-medium tracking-tight">Select a text column to begin analysis</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="bg-brand-sidebar/30 p-6 rounded-2xl border border-brand-border/40 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h2 className="text-2xl font-bold text-brand-text flex items-center gap-3">
+            Text Insights <span className="text-brand-muted font-normal">/</span> <span className="text-brand-accent">{textCol}</span>
+          </h2>
+          <p className="text-sm text-brand-muted mt-1">Natural Language Processing sequence completed for {data.length} segments.</p>
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-brand-muted uppercase">Switch Column</label>
+          <select value={textCol} onChange={e => setTextCol(e.target.value)} className="block bg-brand-bg border border-brand-border rounded px-2 py-1 text-[11px] font-bold focus:border-brand-accent outline-none">
+            {metadata.map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+          </select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <section className="space-y-4">
